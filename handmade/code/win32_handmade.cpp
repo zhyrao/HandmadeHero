@@ -6,6 +6,13 @@
  */
 #include <windows.h>
 
+#define internal static			// use for functions
+#define local_presist static	// use for local vari
+#define global_variable static	// use for global vari
+
+//TODO: this is global now
+global_variable bool Running = false;
+
 LRESULT CALLBACK MainWindowProc(HWND   Window,
 								UINT   Message,
 								WPARAM WParam,
@@ -20,11 +27,11 @@ LRESULT CALLBACK MainWindowProc(HWND   Window,
 		} break;
 		case WM_DESTROY:
 		{
-			OutputDebugStringA("WM_DESTROY\n");
+			Running = false;
 		} break;
 		case WM_CLOSE:
 		{
-			OutputDebugStringA("WM_CLOSE\n");
+			Running = false;
 		} break;
 		case WM_ACTIVATEAPP:
 		{
@@ -85,8 +92,9 @@ WinMain(
 
 		if (WindowHandle)
 		{
+			Running = true;
 			MSG Message;
-			for(;;)
+			while(Running)
 			{
 				BOOL MessageResult = GetMessage(&Message, 0, 0, 0);
 				if (MessageResult != 0)
