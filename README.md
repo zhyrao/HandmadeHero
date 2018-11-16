@@ -1,2 +1,2 @@
 # HandmadeHero
-Hand made hero following with casy
+[Handmade hero](https://handmadehero.org) following with casey
