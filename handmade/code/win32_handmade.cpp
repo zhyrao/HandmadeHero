@@ -4,12 +4,8 @@
  * @DateTime:    2018-11-15 23:38:09
  * @Description: ...
  */
-#include <windows.h>
+
 #include <stdint.h>
-#include <stdio.h>
-#include <Xinput.h>
-#include <dsound.h>
-#include <math.h>
 
 #define internal static			// use for functions
 #define local_presist static	// use for local vari
@@ -30,6 +26,14 @@ typedef int32 bool32;
 
 typedef float real32;
 typedef double real64;
+
+#include "handmade.cpp"
+
+#include <windows.h>
+#include <stdio.h>
+#include <Xinput.h>
+#include <dsound.h>
+#include <math.h>
 
 struct win32_offscreen_buffer
 {
@@ -183,22 +187,7 @@ Win32GetWindowDimension(HWND Window)
 	return Result;
 }
 
-internal void 
-RenderWeirdGradient(win32_offscreen_buffer* Buffer, int BlueOffset, int GreenOffset)
-{
-	uint8* PixelRow = (uint8*)(Buffer->Memory);
-	for (int Y = 0; Y < Buffer->Height; ++Y)
-	{
-		uint32* Pixel = (uint32*)(PixelRow);
-		for (int X = 0; X < Buffer->Width; ++X)
-		{
-			uint8 Green = (X + BlueOffset);
-			uint8 Blue = (Y + GreenOffset);
-			*Pixel++ = (Green << 8 | Blue);			
-		}
-		PixelRow += Buffer->Pitch;
-	}	
-}
+
 
 
 internal void
@@ -410,11 +399,10 @@ Win32FillSoundBuffer(win32_sount_output* SoundOutput, DWORD ByteToLock, DWORD By
 }
 
 int CALLBACK 
-WinMain(
-	HINSTANCE Instance,
-	HINSTANCE PrevInstance,
-	LPSTR     CommandLine,
-	int       ShowCode)
+WinMain(HINSTANCE Instance,
+		HINSTANCE PrevInstance,
+		LPSTR     CommandLine,
+		int       ShowCode)
 {
 	LARGE_INTEGER PerfCountFrequencyResult;
 	QueryPerformanceFrequency(&PerfCountFrequencyResult);
@@ -525,7 +513,13 @@ WinMain(
 						// NOTE: The controller is not available
 					}
 				}
-				RenderWeirdGradient(&GlobalBackBuffer, XOffset,YOffset);
+				game_offscreen_buffer Buffer = {};
+				Buffer.Memory = GlobalBackBuffer.Memory;
+				Buffer.Width = GlobalBackBuffer.Width;
+				Buffer.Height = GlobalBackBuffer.Height;
+				Buffer.Pitch = GlobalBackBuffer.Pitch;
+				GameUpdateAndRender(&Buffer, XOffset, YOffset);
+				//RenderWeirdGradient(&GlobalBackBuffer, XOffset,YOffset);
 				
 				// Note: DirectSound Output test
 				DWORD PlayCursor;
@@ -563,10 +557,11 @@ WinMain(
 				real64 FPS = (real64)PerfCountFrequency / (real64)CounterElapsed;
 				real64 MCPF = (real64)(CycleElapsed /(1000.0f * 1000.0f));
 
+#if 0
 				char Buffer[256];
 				sprintf(Buffer, "%.02fms/f, %.02ff/s, %.02fmc/f\n", MSPerFrame, FPS, MCPF);
 				OutputDebugStringA(Buffer);
-
+#endif 
 				LastCycleCount = EndCycleCount;
 				LastCounter = EndCounter;
 			}			
