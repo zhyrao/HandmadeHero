@@ -6,6 +6,7 @@
  */
 #include <windows.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <Xinput.h>
 #include <dsound.h>
 #include <math.h>
@@ -154,9 +155,7 @@ Win32InitDSound(HWND Window, int32 SamplesPerSeccond, int32 BufferSize)
 			if (SUCCEEDED(Error))
 			{					
 				OutputDebugStringA("Primary buffer Create as set:\n");
-			}		
-		
-			
+			}						
 			// Start it playing
 		}
 		else
@@ -233,9 +232,7 @@ Win32DisplayBufferInWindow(win32_offscreen_buffer* Buffer,
 						   int WindowWidth,
 						   int WindowHeight)
 {
-	StretchDIBits(DeviceContent, 
-				  /*X, Y, Width, Height,
-				  X, Y, Width, Height,*/
+	StretchDIBits(DeviceContent,
 				  0, 0, WindowWidth, WindowHeight,
 				  0, 0, Buffer->Width, Buffer->Height,
 				  Buffer->Memory,
@@ -419,11 +416,14 @@ WinMain(
 	LPSTR     CommandLine,
 	int       ShowCode)
 {
+	LARGE_INTEGER PerfCountFrequencyResult;
+	QueryPerformanceFrequency(&PerfCountFrequencyResult);
+	int64 PerfCountFrequency = PerfCountFrequencyResult.QuadPart;
+
 	Win32LoadXInput();
 
 	WNDCLASS WindowClass = {};
 
-	//win32_window_dimension Dimension = Win32GetWindowDimension(Window);
 	Win32ResizeDIBSection(&GlobalBackBuffer, 1280, 720);
 
 	WindowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
@@ -471,8 +471,13 @@ WinMain(
 			GlobalSecondaryBuffer->Play(0, 0, DSBPLAY_LOOPING);
 
 			GlobalRunning = true;
+	
+			LARGE_INTEGER LastCounter;
+			QueryPerformanceCounter(&LastCounter);
+
+			uint64 LastCycleCount = __rdtsc();
 			while(GlobalRunning)
-			{
+			{			
 				MSG Message;
 				while(PeekMessage(&Message, 0, 0, 0, PM_REMOVE))
 				{
@@ -520,10 +525,6 @@ WinMain(
 						// NOTE: The controller is not available
 					}
 				}
-				// XINPUT_VIBRATION Vibration;
-				// Vibration.wLeftMotorSpeed = 6000;
-				// Vibration.wRightMotorSpeed = 6000;
-				// XInputSetState(0, &Vibration);
 				RenderWeirdGradient(&GlobalBackBuffer, XOffset,YOffset);
 				
 				// Note: DirectSound Output test
@@ -550,9 +551,25 @@ WinMain(
 
 				win32_window_dimension Dimension = Win32GetWindowDimension(Window);
 				Win32DisplayBufferInWindow(&GlobalBackBuffer, DeviceContent, Dimension.Width, Dimension.Height);
-				//ReleaseDC(Window, DeviceContent);
-			}
-			
+
+				uint64 EndCycleCount = __rdtsc();
+
+				LARGE_INTEGER EndCounter;
+				QueryPerformanceCounter(&EndCounter);
+				
+				uint64 CycleElapsed = EndCycleCount - LastCycleCount;
+				int64 CounterElapsed = EndCounter.QuadPart - LastCounter.QuadPart;
+				real64 MSPerFrame = ((1000.0f * CounterElapsed) / (real64)PerfCountFrequency);
+				real64 FPS = (real64)PerfCountFrequency / (real64)CounterElapsed;
+				real64 MCPF = (real64)(CycleElapsed /(1000.0f * 1000.0f));
+
+				char Buffer[256];
+				sprintf(Buffer, "%.02fms/f, %.02ff/s, %.02fmc/f\n", MSPerFrame, FPS, MCPF);
+				OutputDebugStringA(Buffer);
+
+				LastCycleCount = EndCycleCount;
+				LastCounter = EndCounter;
+			}			
 		}
 		else
 		{
