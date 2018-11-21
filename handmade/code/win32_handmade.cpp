@@ -329,7 +329,7 @@ LRESULT CALLBACK Win32MainWindowProc(HWND   Window,
 		case WM_KEYDOWN:
 		case WM_KEYUP:
 		{
-			uint32 VKCode = WParam;
+			uint32 VKCode = (uint32)WParam;
 			bool32 WasDown = ((LParam & (1 << 30)) != 0);
 			bool32 IsDown = ((LParam & (1 << 31)) == 0);
 
@@ -548,9 +548,9 @@ WinMain(HINSTANCE Instance,
 #endif
 			game_memory GameMemory = {};
 			GameMemory.PermanentStorageSize = Megabytes(64);
-			GameMemory.TransientStorageSize = Gigabytes((uint64)4);
+			GameMemory.TransientStorageSize = Gigabytes(1);
 			uint64 TotalSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
-			GameMemory.PermanentStorage = VirtualAlloc(BaseAddress, TotalSize,
+			GameMemory.PermanentStorage = VirtualAlloc(BaseAddress, (size_t)TotalSize,
 												  MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
 			GameMemory.TransientStorage = ((uint8*)GameMemory.PermanentStorage
@@ -581,7 +581,7 @@ WinMain(HINSTANCE Instance,
 					}
 
 					// Input
-					int MaxControllerCount = XUSER_MAX_COUNT;
+					DWORD MaxControllerCount = XUSER_MAX_COUNT;
 					// if (MaxControllerCount > ArrayCount(NewInput->Controllers))
 					// {
 					// 	MaxControllerCount = ArrayCount(NewInput->Controllers);
@@ -628,8 +628,8 @@ WinMain(HINSTANCE Instance,
 							}
 							NewController->MinY = NewController->MaxY = NewController->EndY = Y;
 
-							int16 StickX = (real32)Pad->sThumbLX;
-							int16 StickY = (real32)Pad->sThumbLY;
+							// int16 StickX = (int16)Pad->sThumbLX;
+							// int16 StickY = (int16)Pad->sThumbLY;
 
 							Win32ProcessXInputDigitalButton(Pad->wButtons,
 															&OldController->Down, XINPUT_GAMEPAD_A,
