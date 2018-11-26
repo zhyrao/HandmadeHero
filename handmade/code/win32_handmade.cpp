@@ -619,7 +619,6 @@ WinMain(HINSTANCE Instance,
 	//WindowClass.hIcon;
 	WindowClass.lpszClassName = "HandmadeHeroWindowClass";
 
-#define FramesOfAudioLatency 3
 #define MoniterRefreshHz 60
 #define GameUpdateHz (MoniterRefreshHz / 2)
 	real32 TargetSecondsPerFrame = 1.0f / (real32)GameUpdateHz;
@@ -649,7 +648,7 @@ WinMain(HINSTANCE Instance,
 			//SoundOutput.RunningSamepleIndex = 0;
 			SoundOutput.BytesperSample = sizeof(int16) * 2;
 			SoundOutput.SencondaryBufferSize = SoundOutput.SamplesPerSecond * SoundOutput.BytesperSample;
-			SoundOutput.LatencySampleCount = FramesOfAudioLatency * (SoundOutput.SamplesPerSecond / GameUpdateHz);
+			SoundOutput.LatencySampleCount = 3 * (SoundOutput.SamplesPerSecond / GameUpdateHz);
 
 			Win32InitDSound(Window, SoundOutput.SamplesPerSecond, SoundOutput.SencondaryBufferSize);
 			Win32ClearBuffer(&SoundOutput);
@@ -700,6 +699,8 @@ WinMain(HINSTANCE Instance,
 
 				DWORD LastPlayCursor = 0;
 				bool32 SoundIsValid = false;
+				DWORD AudioLatencyBytes = 0;
+                real32 AudioLatencySeconds = 0;
 
 				uint64 LastCycleCount = __rdtsc();
 				while(GlobalRunning)
@@ -857,11 +858,21 @@ WinMain(HINSTANCE Instance,
                         DWORD PlayCursor;
                         DWORD WriteCursor;
                         GlobalSecondaryBuffer->GetCurrentPosition(&PlayCursor, &WriteCursor);
+
+                        DWORD UnwrappedWriteCursor = WriteCursor;
+                        if (UnwrappedWriteCursor < PlayCursor)
+                        {
+                        	UnwrappedWriteCursor += SoundOutput.SencondaryBufferSize;
+                        }
+                        AudioLatencyBytes = UnwrappedWriteCursor - PlayCursor;
+                        AudioLatencySeconds = 
+                        (((real32)AudioLatencyBytes / (real32)SoundOutput.BytesperSample) / (real32)SoundOutput.SamplesPerSecond);
+
                         char TextBuffer[256];
                         _snprintf_s(TextBuffer, sizeof(TextBuffer),
-                                    "LPC:%u BTL:%u TC:%u BTW:%u - PC:%u WC:%u\n",
+                                    "LPC:%u BTL:%u TC:%u BTW:%u - PC:%u WC:%u DELTA:%u (%fs)\n",
                                     LastPlayCursor, ByteToLock, TargetCursor, BytesToWrite,
-                                    PlayCursor, WriteCursor);
+                                    PlayCursor, WriteCursor, AudioLatencyBytes, AudioLatencySeconds);
                         OutputDebugStringA(TextBuffer);
 #endif   
 						Win32FillSoundBuffer(&SoundOutput, ByteToLock, BytesToWrite, &SoundBuffer);									
@@ -922,9 +933,10 @@ WinMain(HINSTANCE Instance,
 
 #if HANDMADE_INTERNAL
 					{
+						Assert(DebugTimeMarkerIndex < ArrayCount(DebugTimeMarkers));
 						win32_debug_time_marker *Marker = &DebugTimeMarkers[DebugTimeMarkerIndex++];
 						
-						if (DebugTimeMarkerIndex > ArrayCount(DebugTimeMarkers))
+						if (DebugTimeMarkerIndex == ArrayCount(DebugTimeMarkers))
 						{
 							DebugTimeMarkerIndex = 0;
 						}
