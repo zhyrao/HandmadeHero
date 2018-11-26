@@ -1,3 +1,4 @@
+#if !defined(WIN32_HANDMADE_H)
 /**
  * @Author:      joe
  * @Version:     1.0
@@ -12,6 +13,7 @@ struct win32_offscreen_buffer
 	int Width;
 	int Height;
 	int Pitch;
+	int BytesPerPixel;
 };
 
 struct win32_window_dimension
@@ -27,7 +29,16 @@ struct win32_sount_output
 	int SamplesPerSecond;
 	uint32 RunningSamepleIndex;
 	int BytesperSample;
-	int SencondaryBufferSize;
+	DWORD SencondaryBufferSize;
 	real32 tSine;
 	int LatencySampleCount;
 };
+
+struct win32_debug_time_marker
+{
+	DWORD PlayCursor;
+	DWORD WriteCursor;
+};
+
+#define WIN32_HANDMADE_H
+#endif
