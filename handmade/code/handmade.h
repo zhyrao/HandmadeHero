@@ -54,6 +54,11 @@ SafeTruncateUInt64(uint64 Value)
     return(Result);
 }
 
+struct thread_context
+{
+    int Placeholder;
+};
+
 #if HANDMADE_INTERNAL
 
 struct debug_read_file_result
@@ -128,6 +133,8 @@ struct game_controller_input
 
 struct game_input
 {   
+    game_button_state MouseButtons[5];
+    int32 MouseX, MouseY, MouseZ;
     game_controller_input Controllers[5];
 };
 inline game_controller_input *GetController(game_input *Input, int unsigned ControllerIndex)

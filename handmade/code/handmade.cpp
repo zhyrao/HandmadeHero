@@ -141,6 +141,18 @@ extern "C" GAME_UPDATE_AND_RENDER(GameUpdateAndRender)
     
     RenderWeirdGradient(Buffer, GameState->BlueOffset, GameState->GreenOffset);
     RenderPlayer(Buffer, GameState->PlayerX, GameState->PlayerY);
+
+    RenderPlayer(Buffer, Input->MouseX, Input->MouseY);
+
+    for(int ButtonIndex = 0;
+        ButtonIndex < ArrayCount(Input->MouseButtons);
+        ++ButtonIndex)
+    {
+        if(Input->MouseButtons[ButtonIndex].EndedDown)
+        {
+            RenderPlayer(Buffer, 10 + 20*ButtonIndex, 10);
+        }
+    }
 }
 
 extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
@@ -148,15 +160,3 @@ extern "C" GAME_GET_SOUND_SAMPLES(GameGetSoundSamples)
     game_state *GameState = (game_state *)Memory->PermanentStorage;
     GameOutputSound(GameState, SoundBuffer, GameState->ToneHz);
 }
-
-#if HANDMADE_WIN32
-#include "windows.h"
-BOOL WINAPI DllMain(
-    HINSTANCE hinstDLL,
-    DWORD fdwReason,
-    LPVOID lpvReserved
-                    )
-{
-    return(TRUE);
-}
-#endif
