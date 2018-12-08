@@ -135,6 +135,8 @@ struct game_input
 {   
     game_button_state MouseButtons[5];
     int32 MouseX, MouseY, MouseZ;
+
+    real32 SecondToAdvanceOverUpdate;
     game_controller_input Controllers[5];
 };
 inline game_controller_input *GetController(game_input *Input, int unsigned ControllerIndex)
@@ -170,15 +172,6 @@ typedef GAME_GET_SOUND_SAMPLES(game_get_sound_samples);
 
 struct game_state
 {
-    int ToneHz;
-    int GreenOffset;
-    int BlueOffset;
-
-    real32 tSine;
-
-    int PlayerX;
-    int PlayerY;
-    real32 tJump;
 };
 
 #define HANDMADE_H

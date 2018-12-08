@@ -922,7 +922,7 @@ WinMain(HINSTANCE Instance,
     
     WNDCLASSA WindowClass = {};
 
-    Win32ResizeDIBSection(&GlobalBackbuffer, 1280, 720);
+    Win32ResizeDIBSection(&GlobalBackbuffer, 960, 540);
     
     WindowClass.style = CS_HREDRAW|CS_VREDRAW|CS_OWNDC;
     WindowClass.lpfnWndProc = Win32MainWindowCallback;
@@ -940,8 +940,8 @@ WinMain(HINSTANCE Instance,
                 WS_OVERLAPPEDWINDOW|WS_VISIBLE,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
+                1000,
+                600,
                 0,
                 0,
                 Instance,
@@ -1051,6 +1051,8 @@ WinMain(HINSTANCE Instance,
                 game_input Input[2] = {};
                 game_input *NewInput = &Input[0];
                 game_input *OldInput = &Input[1];
+
+                NewInput->SecondToAdvanceOverUpdate = TargetSecondsPerFrame;
     
                 LARGE_INTEGER LastCounter = Win32GetWallClock();
                 LARGE_INTEGER FlipWallClock = Win32GetWallClock();
