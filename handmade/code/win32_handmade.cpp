@@ -85,7 +85,7 @@ DEBUG_PLATFORM_READ_ENTIRE_FILE(DEBUGPlatformReadEntireFile)
                 }
                 else
                 {                    
-                    DEBUGPlatformFreeFileMemory(Result.Contents);
+                    DEBUGPlatformFreeFileMemory(Thread, Result.Contents);
                     Result.Contents = 0;
                 }
             }
@@ -383,8 +383,16 @@ internal void
 Win32DisplayBufferInWindow(win32_offscreen_buffer *Buffer,
                            HDC DeviceContext, int WindowWidth, int WindowHeight)
 {
+	int OffsetX = 10;
+	int OffsetY = 10;
+	PatBlt(DeviceContext, 0, 0, WindowWidth, OffsetY, BLACKNESS);
+	PatBlt(DeviceContext, 0, OffsetY + Buffer->Height, WindowWidth, WindowHeight, BLACKNESS);
+	PatBlt(DeviceContext, 0, 0, OffsetX, WindowHeight, BLACKNESS);
+	PatBlt(DeviceContext, OffsetX + Buffer->Width, 0, WindowWidth, WindowHeight, BLACKNESS);
+
+
     StretchDIBits(DeviceContext,
-                  0, 0, Buffer->Width, Buffer->Height,
+                  OffsetX, OffsetY, Buffer->Width, Buffer->Height,
                   0, 0, Buffer->Width, Buffer->Height,
                   Buffer->Memory,
                   &Buffer->Info,
@@ -1217,6 +1225,7 @@ WinMain(HINSTANCE Instance,
                                 NewController->IsConnected = false;
                             }
                         }
+                        thread_context Thread = {};
 
                         game_offscreen_buffer Buffer = {};
                         Buffer.Memory = GlobalBackbuffer.Memory;
@@ -1236,7 +1245,7 @@ WinMain(HINSTANCE Instance,
                         }
                         if (GameCode.UpdateAndRender)
                         {
-                        	GameCode.UpdateAndRender(&GameMemory, NewInput, &Buffer);
+                        	GameCode.UpdateAndRender(&Thread, &GameMemory, NewInput, &Buffer);
                         }
 
                         LARGE_INTEGER AudioWallClock = Win32GetWallClock();
@@ -1327,7 +1336,7 @@ WinMain(HINSTANCE Instance,
                             SoundBuffer.Samples = Samples;
                             if (GameCode.GetSoundSamples)
                             {
-                            	GameCode.GetSoundSamples(&GameMemory, &SoundBuffer);
+                            	GameCode.GetSoundSamples(&Thread, &GameMemory, &SoundBuffer);
                             }
 #if HANDMADE_INTERNAL
                             win32_debug_time_marker *Marker = &DebugTimeMarkers[DebugTimeMarkerIndex];
